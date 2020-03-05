@@ -8,11 +8,15 @@
 
 import Foundation
 
+let LOL = "LOLL"
 /// Replace this to setup environment for requests
 public var environment = Environment(configuration: nil)
 
 public struct Environment {
-    let configuration: Configuration?
+    public init(configuration: Configuration?) {
+        self.configuration = configuration
+    }
+    public let configuration: Configuration?
 }
 
 public struct BasicHTTPAuth {
@@ -33,9 +37,14 @@ public struct BasicHTTPAuth {
     }
 }
 
-struct Configuration {
-    let basicHTTPAuth: BasicHTTPAuth
-    let baseURL: NSURL
+public struct Configuration {
+    public let basicHTTPAuth: BasicHTTPAuth
+    public let baseURL: URL
+
+    public init(basicHTTPAuth: BasicHTTPAuth, baseURL: URL) {
+        self.basicHTTPAuth = basicHTTPAuth
+        self.baseURL = baseURL
+    }
 }
 
 
