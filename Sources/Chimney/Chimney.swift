@@ -1,14 +1,5 @@
-//
-//  Requestable.swift
-//  Chimney
-//
-//  Created by Håkon Bogen on 05/03/2020,10.
-//  Copyright © 2020 Beining & Bogen. All rights reserved.
-//
-
 import Foundation
 
-let LOL = "LOLL"
 /// Replace this to setup environment for requests
 public var environment = Environment(configuration: nil)
 
@@ -38,10 +29,10 @@ public struct BasicHTTPAuth {
 }
 
 public struct Configuration {
-    public let basicHTTPAuth: BasicHTTPAuth
+    public let basicHTTPAuth: BasicHTTPAuth?
     public let baseURL: URL
 
-    public init(basicHTTPAuth: BasicHTTPAuth, baseURL: URL) {
+    public init(basicHTTPAuth: BasicHTTPAuth?, baseURL: URL) {
         self.basicHTTPAuth = basicHTTPAuth
         self.baseURL = baseURL
     }
@@ -173,7 +164,7 @@ extension Requestable {
         let auth: [String: String]?
         var urlComponents: URLComponents
 
-        auth = environment.configuration?.basicHTTPAuth.authorizationHeader
+        auth = environment.configuration?.basicHTTPAuth?.authorizationHeader
         urlComponents = URLComponents.init(string: baseURL)!
         
             do {
@@ -232,21 +223,6 @@ extension Requestable {
             }
     }
 }
-/// When we get a specific set of error codes on requests, the app should do different kinds of "global actions", for example when getting 403, in most cases the user should get logged out.
-/// The log out logic is in a completely separate part of the app than the code doing the request, so it should send a global notification
-private func sendStatusCodeGlobalNotificationIfNecessary(url: URL?, statusCode: Int ) {
-//    guard let url = url else { return }
-    switch statusCode {
-    case 400:
-        NotificationCenter.default.post(Notification.init(name: Notification.Name.init("HTTP 400"), object: nil))
-    case 401:
-        NotificationCenter.default.post(Notification.init(name: Notification.Name.init("HTTP 401"), object: nil))
-    case 403:
-        NotificationCenter.default.post(Notification.init(name: Notification.Name.init("HTTP 403"), object: nil))
-    default:
-        break
-    }
-}
 
 extension Requestable where Response: Decodable {
     internal static func decode(data: Data) -> Result<Response, RequestableError> {
@@ -261,12 +237,6 @@ extension Requestable where Response: Decodable {
     }
 }
 
-
-//func testStuff() {
-//    SetPowerLevelRequestable.request(path: .init(homeID: "kei", deviceID: "keiek", powerLevel: 3)) { (result) in
-//
-//    }
-//}
 
 //extension Requestable where Response == Data {
 //    public static func request(path: Path, parameters: Parameter, sessionConfig: URLSessionConfiguration? = nil) -> SignalProducer<Response, RequestableError> {
@@ -391,24 +361,9 @@ extension Requestable where Response: Decodable {
         }
     }
 }
-//extension Requestable where Response: Decodable {
-//internal static func decode(data: Data) -> Result<Response, RequestableError> {
-//    let decoder = JSONDecoder()
-//    do {
-//        decoder.dataDecodingStrategy = dataDecodingStrategy
-//        decoder.dateDecodingStrategy = dateDecodingStrategy
-//        return .success(try decoder.decode(Response.self, from: data))
-//    } catch {
-//        return .failure(.decoding(error: error as! DecodingError, data: data))
-//    }
-//}
-//
-//    public static func request(path: Path, sessionConfig: URLSessionConfiguration? = nil) -> SignalProducer<Response, RequestableError> {
-//        return requestData(serverConfig: serverConfig, path: path, parameters: nil, sessionConfig: sessionConfig)
-//            .attemptMap(decode(data:))
-//    }
 
 extension Requestable where Response: Decodable, Parameter == Never {
+    
 }
 
 //This will be used to check if header contains outdated.
