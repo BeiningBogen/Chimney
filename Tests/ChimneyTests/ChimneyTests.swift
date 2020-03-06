@@ -22,14 +22,35 @@ final class ChimneyTests: XCTestCase {
             }
             exp.fulfill()
         }
-
+        
         waitForExpectations(timeout: 10, handler: nil)
     }
-
+    
+    func testWrongPathTimeout() {
+        let exp = expectation(description: "do a DELETE request that should time out")
+        GetWrongPathTodosRequestable.request(path: .init(index: 1)) { result in
+            switch result {
+                case .failure(let error):
+                    if case .statusCode(let code, _, _ ) = error {
+                        XCTAssertEqual(code, 404)
+                    } else {
+                        XCTFail("Wrong error type")
+                    }
+                    break
+                case .success(_):
+                    XCTFail("The web server should not support DELETE.")
+            }
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 31, handler: nil)
+    }
+    
     static var allTests = [
         ("testSimpleGetRequest", testSimpleGetRequest),
+        ("testWrongPathTimeout", testWrongPathTimeout)
     ]
-   
+    
 }
 
 extension Result where Failure : Error {
@@ -38,5 +59,5 @@ extension Result where Failure : Error {
         return false
     }
     
-
+    
 }

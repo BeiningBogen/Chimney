@@ -39,3 +39,29 @@ public enum GetTodosRequestable: Requestable {
         }
     }
 }
+
+/// This is an example request that is in a test that does not support Http keyword DELETE
+public enum GetWrongPathTodosRequestable: Requestable {
+    public typealias Parameter = Never
+    public typealias Response = Todo
+    
+    public static let method: HTTPMethod = .get
+    
+    public struct Path: PathComponentsProvider {
+        public typealias Query = Never
+       
+        public let index: Int
+        
+        public init(index: Int) {
+          
+            self.index = index
+        }
+        
+        public var pathComponents: (path: [String], query: Query?) {
+            return (
+                ["todos", "wrongPath", "\(self.index)"],
+                nil
+            )
+        }
+    }
+}
