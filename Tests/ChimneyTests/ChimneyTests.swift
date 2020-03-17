@@ -52,12 +52,3 @@ final class ChimneyTests: XCTestCase {
     ]
     
 }
-
-extension Result where Failure : Error {
-    
-    var isSuccess: Bool  {
-        return false
-    }
-    
-    
-}

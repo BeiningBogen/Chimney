@@ -23,7 +23,6 @@ public struct BasicHTTPAuth {
         let credentialData = "\(username):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: Data.Base64EncodingOptions.lineLength76Characters)
         let header = ["Authorization": "Basic \(base64Credentials)"]
-
         return header
     }
 }
@@ -31,6 +30,8 @@ public struct BasicHTTPAuth {
 public struct Configuration {
     public let basicHTTPAuth: BasicHTTPAuth?
     public let baseURL: URL
+    
+    public var logPrettyPrintedJson = true
 
     public init(basicHTTPAuth: BasicHTTPAuth?, baseURL: URL) {
         self.basicHTTPAuth = basicHTTPAuth
@@ -237,87 +238,6 @@ extension Requestable where Response: Decodable {
     }
 }
 
-
-//extension Requestable where Response == Data {
-//    public static func request(path: Path, parameters: Parameter, sessionConfig: URLSessionConfiguration? = nil) -> SignalProducer<Response, RequestableError> {
-//        return requestData(serverConfig: serverConfig, path: path, parameters: parameters, sessionConfig: sessionConfig)
-//    }
-//}
-
-//extension Requestable where Response == Data, Parameter == Never {
-//    public static func request(path: Path, sessionConfig: URLSessionConfiguration? = nil) -> SignalProducer<Response, RequestableError> {
-//        return requestData(serverConfig: serverConfig, path: path, parameters: nil, sessionConfig: sessionConfig)
-//    }
-//}
-//
-//extension Requestable where Response: Decodable {
-//    public static func request(serverConfig: ServerConfigType, path: Path, parameters: Parameter, sessionConfig: URLSessionConfiguration? = nil) -> SignalProducer<Response, RequestableError> {
-//        return requestData(serverConfig: serverConfig, path: path, parameters: parameters, sessionConfig: sessionConfig)
-//            .attemptMap(decode(data:))
-//    }
-//
-//    public static func waitForMessageOrError(service: ServiceType, path: Path, sessionConfig: URLSessionConfiguration? = nil, parameters: Parameter?, completeOnMessage: MessageType, errorMessages: [MessageType]? = nil) -> SignalProducer<Void, RequestableError> {
-//        return SignalProducer<Void, RequestableError> { observer, _ in
-//            requestData(
-//                serverConfig: service.serverConfig,
-//                path: path,
-//                parameters: parameters,
-//                sessionConfig: sessionConfig
-//            )
-//            .attemptMap(decode(data:))
-//            .start { value in
-//                switch value {
-//                case .value:
-//                    service.waitFor(
-//                        message: completeOnMessage,
-//                        failOn: errorMessages
-//                    )
-//                    .observe { status in
-//                        switch status {
-//                            case .value:
-//                                observer.send(value: ())
-//                            case .failed(let error):
-//                                observer.send(error: error)
-//                            default:
-//                                break
-//                        }
-//                    }
-//                case .failed(let error):
-//                    observer.send(error: error)
-//                default:
-//                    break
-//                }
-//            }
-//        }
-//    }
-//
-//    public static func waitForMessage(service: ServiceType, path: Path, sessionConfig: URLSessionConfiguration? = nil, parameters: Parameter?, completeOnMessage: MessageType) -> SignalProducer<Void, RequestableError> {
-//        return SignalProducer<Void, RequestableError> { observer, _ in
-//            requestData(serverConfig: service.serverConfig, path: path, parameters: parameters, sessionConfig: sessionConfig)
-//                .attemptMap(decode(data:))
-//                .start { value in
-//                    switch value {
-//                    case .value:
-//                        service.waitFor(message: completeOnMessage).observe { status in
-//                            switch status {
-//                            case .value:
-//                                observer.send(value: ())
-//                            case .failed(let error):
-//                                observer.send(error: error)
-//                            default:
-//                                break
-//                            }
-//                        }
-//                    case .failed(let error):
-//                        observer.send(error: error)
-//                    default:
-//                        break
-//                    }
-//            }
-//        }
-//    }
-//}
-
 extension Requestable where Response: Decodable, Parameter == Never {
     public static func request(path: Path, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping (Result<Response, RequestableError>) -> Void) {
         return requestData(path: path, parameters: nil, sessionConfig: sessionConfig) { result in
@@ -366,13 +286,6 @@ extension Requestable where Response: Decodable, Parameter == Never {
     
 }
 
-//This will be used to check if header contains outdated.
-fileprivate extension Dictionary where Key == AnyHashable {
-    func isOutdated() -> Bool {
-        return false
-    }
-}
-
 extension HTTPCookieStorage {
     static func storedCookies() -> [String: String] {
         guard let existingCookies = HTTPCookieStorage.shared.cookies else {
@@ -401,7 +314,7 @@ extension Requestable {
     }
     
     static func bodyToJson(data: Data?) -> String {
-        if true {
+        if environment.configuration?.logPrettyPrintedJson ?? false {
             if let httpBody = data,
                 let jsonObject = try? JSONSerialization.jsonObject(with: httpBody, options: []),
                 let data = try? JSONSerialization.data(withJSONObject: jsonObject, options: JSONSerialization.WritingOptions.prettyPrinted),
