@@ -157,10 +157,19 @@ extension Requestable {
 
 extension Requestable {
     internal static func requestData(path: Path, parameters: Parameter?, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping ((Result<Data, RequestableError>) -> Void)) {
-        guard let baseURL = environment.configuration?.baseURL.absoluteString else {
-            print("No baseURL set!")
+        
+        let foundBaseURL: String? = {
+            if let firstPathComponent = path.pathComponents.path.first, firstPathComponent.contains("https://") {
+                return firstPathComponent
+            } else {
+                return environment.configuration?.baseURL.absoluteString
+            }
+        }()
+        guard let baseURL = foundBaseURL else {
+            print("No base URL set or given")
             return
         }
+        
         
         let auth: [String: String]?
         var urlComponents: URLComponents
