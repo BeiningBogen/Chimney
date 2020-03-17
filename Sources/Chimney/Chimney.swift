@@ -154,17 +154,23 @@ extension Requestable {
         return config
     }
 }
+extension PathComponentsProvider {
+    /// If a request path has the base URL as first path component, set that as the base URL for the request and remove it from path components
+    func baseURLAndPathComponents() -> (String?, [String]) {
+        if let firstPathComponent = pathComponents.path.first, firstPathComponent.contains("https://") {
+            var components = pathComponents.path
+            components.removeFirst()
+            return (firstPathComponent, components)
+        }
+        return (environment.configuration?.baseURL.absoluteString, pathComponents.path)
+    }
+}
 
 extension Requestable {
     internal static func requestData(path: Path, parameters: Parameter?, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping ((Result<Data, RequestableError>) -> Void)) {
+
+        let (foundBaseURL, pathComponents) = path.baseURLAndPathComponents()
         
-        let foundBaseURL: String? = {
-            if let firstPathComponent = path.pathComponents.path.first, firstPathComponent.contains("https://") {
-                return firstPathComponent
-            } else {
-                return environment.configuration?.baseURL.absoluteString
-            }
-        }()
         guard let baseURL = foundBaseURL else {
             print("No base URL set or given")
             return
@@ -190,7 +196,7 @@ extension Requestable {
                         urlComponents.queryItems = dictionary.map { URLQueryItem(name: $0, value: String(describing: $1)) }
                     }
 
-                    urlComponents.path = path.pathComponents.path
+                    urlComponents.path = pathComponents
                         .reduce(baseUrl, { $0.appendingPathComponent($1) })
                         .path
 
