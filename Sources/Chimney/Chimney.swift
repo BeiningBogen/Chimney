@@ -157,7 +157,7 @@ extension Requestable {
 extension PathComponentsProvider {
     /// If a request path has the base URL as first path component, set that as the base URL for the request and remove it from path components
     func baseURLAndPathComponents() -> (String?, [String]) {
-        if let firstPathComponent = pathComponents.path.first, firstPathComponent.contains("https://") {
+        if let firstPathComponent = pathComponents.path.first, firstPathComponent.contains("https://") || firstPathComponent.contains("http://") {
             var components = pathComponents.path
             components.removeFirst()
             return (firstPathComponent, components)
