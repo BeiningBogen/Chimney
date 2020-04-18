@@ -46,7 +46,26 @@ final class ChimneyTests: XCTestCase {
         waitForExpectations(timeout: 31, handler: nil)
     }
     
+    func testGetRequestWithBaseURLInPathComponents() {
+        let exp = expectation(description: "do a simple GET request")
+        let wantedResult = Todo.init(id: 1, userId: 1, title: "delectus aut autem", completed: false)
+        /// Sets the "wrong baseURL" so we can test that this is not used
+        Chimney.environment = Environment.init(configuration: Configuration.init(basicHTTPAuth: nil, baseURL: URL.init(string: "https://notAWorkingDomain.no")!))
+        
+        GetTodosWithBaseURLInPathRequestable.request(path: .init(index: 1)) { result in
+            switch result {
+                case .failure(let error):
+                    XCTFail(error.debugDescription)
+                case .success(let success):
+                    XCTAssertEqual(success, wantedResult)
+            }
+            exp.fulfill()
+        }
+        
+        waitForExpectations(timeout: 10, handler: nil)
+    }
     static var allTests = [
+        ("testGetRequestWithBaseURLInPathComponents", testGetRequestWithBaseURLInPathComponents),
         ("testSimpleGetRequest", testSimpleGetRequest),
         ("testWrongPathTimeout", testWrongPathTimeout)
     ]

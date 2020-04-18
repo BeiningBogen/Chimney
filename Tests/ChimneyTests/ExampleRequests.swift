@@ -65,3 +65,29 @@ public enum GetWrongPathTodosRequestable: Requestable {
         }
     }
 }
+
+
+public enum GetTodosWithBaseURLInPathRequestable: Requestable {
+    public typealias Parameter = Never
+    public typealias Response = Todo
+    
+    public static let method: HTTPMethod = .get
+    
+    public struct Path: PathComponentsProvider {
+        public typealias Query = Never
+       
+        public let index: Int
+        
+        public init(index: Int) {
+          
+            self.index = index
+        }
+        
+        public var pathComponents: (path: [String], query: Query?) {
+            return (
+                ["https://jsonplaceholder.typicode.com","todos", "\(self.index)"],
+                nil
+            )
+        }
+    }
+}
