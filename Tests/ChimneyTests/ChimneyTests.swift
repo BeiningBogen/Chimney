@@ -5,7 +5,7 @@ final class ChimneyTests: XCTestCase {
     
     override func setUp() {
         super.setUp()
-        Chimney.environment = Environment.init(configuration: Configuration.init(basicHTTPAuth: nil, baseURL: URL.init(string: "https://jsonplaceholder.typicode.com")!))
+        Chimney.environment = Environment.init(configuration: Configuration.init(authentication: nil, baseURL: URL.init(string: "https://jsonplaceholder.typicode.com")!))
         
     }
     
@@ -50,7 +50,7 @@ final class ChimneyTests: XCTestCase {
         let exp = expectation(description: "do a simple GET request")
         let wantedResult = Todo.init(id: 1, userId: 1, title: "delectus aut autem", completed: false)
         /// Sets the "wrong baseURL" so we can test that this is not used
-        Chimney.environment = Environment.init(configuration: Configuration.init(basicHTTPAuth: nil, baseURL: URL.init(string: "https://notAWorkingDomain.no")!))
+        Chimney.environment = Environment.init(configuration: Configuration.init(authentication: nil, baseURL: URL.init(string: "https://notAWorkingDomain.no")!))
         
         GetTodosWithBaseURLInPathRequestable.request(path: .init(index: 1)) { result in
             switch result {
@@ -64,10 +64,35 @@ final class ChimneyTests: XCTestCase {
         
         waitForExpectations(timeout: 10, handler: nil)
     }
+
+    func testBearerAuthentication() {
+        Chimney.environment = Environment.init(
+            configuration: Configuration.init(
+                authentication: BearerAuth(token: "grrbrr"),
+                baseURL: URL.init(string: "https://jsonplaceholder.typicode.com")!
+            )
+        )
+        let exp = expectation(description: "do a simple GET request")
+        let wantedResult = Todo.init(id: 1, userId: 1, title: "delectus aut autem", completed: false)
+
+        GetTodosRequestable.request(path: GetTodosRequestable.Path.init(index: 1)) { result in
+            switch result {
+                case .failure(let error):
+                    XCTFail(error.debugDescription)
+                case .success(let success):
+                    XCTAssertEqual(success, wantedResult)
+            }
+            exp.fulfill()
+        }
+
+        waitForExpectations(timeout: 10, handler: nil)
+    }
+
     static var allTests = [
         ("testGetRequestWithBaseURLInPathComponents", testGetRequestWithBaseURLInPathComponents),
         ("testSimpleGetRequest", testSimpleGetRequest),
-        ("testWrongPathTimeout", testWrongPathTimeout)
+        ("testWrongPathTimeout", testWrongPathTimeout),
+        ("testBearerAuthentication", testBearerAuthentication)
     ]
     
 }

@@ -10,7 +10,11 @@ public struct Environment {
     public let configuration: Configuration?
 }
 
-public struct BasicHTTPAuth {
+public protocol Authentication {
+    var authorizationHeader: [String: String] { get }
+}
+
+public struct BasicHTTPAuth: Authentication {
     public let username: String
     public let password: String
 
@@ -27,18 +31,29 @@ public struct BasicHTTPAuth {
     }
 }
 
+public struct BearerAuth: Authentication {
+    public let token: String
+
+    public init(token: String) {
+        self.token = token
+    }
+
+    public var authorizationHeader: [String: String] {
+        return ["Authorization": "Bearer\(token)"]
+    }
+}
+
 public struct Configuration {
-    public let basicHTTPAuth: BasicHTTPAuth?
+    public let authentication: Authentication?
     public let baseURL: URL
     
     public var logPrettyPrintedJson = true
 
-    public init(basicHTTPAuth: BasicHTTPAuth?, baseURL: URL) {
-        self.basicHTTPAuth = basicHTTPAuth
+    public init(authentication: Authentication?, baseURL: URL) {
+        self.authentication = authentication
         self.baseURL = baseURL
     }
 }
-
 
 public protocol PathComponentsProvider {
     associatedtype Query: Encodable
@@ -168,7 +183,7 @@ extension Requestable {
         let auth: [String: String]?
         var urlComponents: URLComponents
 
-        auth = environment.configuration?.basicHTTPAuth?.authorizationHeader
+        auth = environment.configuration?.authentication?.authorizationHeader
         urlComponents = URLComponents.init(string: baseURL)!
         
             do {
