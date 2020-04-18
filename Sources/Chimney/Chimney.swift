@@ -39,7 +39,7 @@ public struct BearerAuth: Authentication {
     }
 
     public var authorizationHeader: [String: String] {
-        return ["Authorization": "Bearer\(token)"]
+        return ["Authorization": "Bearer:\(token)"]
     }
 }
 
