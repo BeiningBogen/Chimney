@@ -155,11 +155,10 @@ extension Requestable {
     }
 
     public static var mainHeaders: [String: String] {
-        return [String : String]()
-        /*return [
+        return [
             "Accept": RequestableParameterEncoding.json.contentType,
             "Content-Type": parameterEncoding.contentType
-        ]*/
+        ]
     }
 
     public static var sessionConfig: URLSessionConfiguration {
