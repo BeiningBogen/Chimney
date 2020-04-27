@@ -3,6 +3,10 @@ import Foundation
 /// Replace this to setup environment for requests
 public var environment = Environment(configuration: nil)
 
+public protocol APIType {
+    var url: String { get }
+}
+
 public struct Environment {
     public init(configuration: Configuration?) {
         self.configuration = configuration
@@ -124,6 +128,7 @@ public protocol Requestable {
     associatedtype Path: PathComponentsProvider
     associatedtype Response
 
+    static var apiType: APIType? { get }
     static var method: HTTPMethod { get }
     static var dateEncodingStrategy: JSONEncoder.DateEncodingStrategy { get }
     static var dataEncodingStrategy: JSONEncoder.DataEncodingStrategy { get }
@@ -170,7 +175,6 @@ extension Requestable {
     }
 }
 
-
 extension Requestable {
     internal static func requestData(path: Path, parameters: Parameter?, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping ((Result<Data, RequestableError>) -> Void)) {
 
@@ -184,8 +188,12 @@ extension Requestable {
         var urlComponents: URLComponents
 
         auth = environment.configuration?.authentication?.authorizationHeader
-        urlComponents = URLComponents.init(string: baseURL)!
-        
+        if let url = apiType?.url {
+            urlComponents = URLComponents.init(string: url)!
+        } else {
+            urlComponents = URLComponents.init(string: baseURL)!
+        }
+
             do {
                 if let baseUrl = urlComponents.url {
                     let encoder = JSONEncoder()
