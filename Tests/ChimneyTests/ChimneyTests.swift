@@ -16,7 +16,7 @@ final class ChimneyTests: XCTestCase {
         GetTodosRequestable.request(path: GetTodosRequestable.Path.init(index: 1)) { result in
             switch result {
                 case .failure(let error):
-                    XCTFail(error. debugDescription)
+                    XCTFail(error.debugDescription)
                 case .success(let success):
                     XCTAssertEqual(success, wantedResult)
             }

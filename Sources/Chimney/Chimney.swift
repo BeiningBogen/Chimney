@@ -5,6 +5,7 @@ public var environment = Environment(configuration: nil)
 
 public protocol APIType {
     var url: String { get }
+    var authentication: Authentication? { get }
 }
 
 public struct Environment {
@@ -187,7 +188,12 @@ extension Requestable {
         let auth: [String: String]?
         var urlComponents: URLComponents
 
-        auth = environment.configuration?.authentication?.authorizationHeader
+        if let authentication = apiType?.authentication {
+            auth = authentication.authorizationHeader
+        } else {
+            auth = environment.configuration?.authentication?.authorizationHeader
+        }
+
         if let url = apiType?.url {
             urlComponents = URLComponents.init(string: url)!
         } else {

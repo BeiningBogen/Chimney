@@ -17,10 +17,12 @@ public struct Todo: Codable, Equatable {
 
 public struct ApiType1: APIType {
     public var url = "omg.lol.grr"
+    public var authentication: Authentication? = BearerAuth(token: "lol")
 }
 
 public struct ApiType2: APIType {
     public var url = "lol.omg.grr"
+    public var authentication: Authentication? = BasicHTTPAuth(username: "omg", password: "lol")
 }
 
 public enum GetTodosRequestable: Requestable {
