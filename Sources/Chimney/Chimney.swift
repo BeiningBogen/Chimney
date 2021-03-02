@@ -326,9 +326,9 @@ extension Requestable where Response: Decodable {
     }
 }
 
-extension Requestable where Response == Void {
-  public static func request(path: Path, parameters: Parameter, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping (Result<Response, RequestableError>) -> Void) {
-    return requestData(path: path, parameters: parameters, sessionConfig: sessionConfig) { result in
+extension Requestable where Response == Void, Parameter == Never {
+  public static func request(path: Path, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping (Result<Response, RequestableError>) -> Void) {
+    return requestData(path: path, parameters: nil, sessionConfig: sessionConfig) { result in
       switch result {
         case .failure(let error):
           completion(.failure(error))
