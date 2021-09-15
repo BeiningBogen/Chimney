@@ -3,6 +3,11 @@ import Foundation
 /// Replace this to setup environment for requests
 public var environment = Environment(configuration: nil)
 
+public protocol APIType {
+    var url: String { get }
+    var authentication: Authentication? { get }
+}
+
 public struct Environment {
     public init(configuration: Configuration?) {
         self.configuration = configuration
@@ -10,7 +15,11 @@ public struct Environment {
     public let configuration: Configuration?
 }
 
-public struct BasicHTTPAuth {
+public protocol Authentication {
+    var authorizationHeader: [String: String] { get }
+}
+
+public struct BasicHTTPAuth: Authentication {
     public let username: String
     public let password: String
 
@@ -27,18 +36,29 @@ public struct BasicHTTPAuth {
     }
 }
 
+public struct BearerAuth: Authentication {
+    public let token: String
+
+    public init(token: String) {
+        self.token = token
+    }
+
+    public var authorizationHeader: [String: String] {
+        return ["Authorization": "Bearer: \(token)"]
+    }
+}
+
 public struct Configuration {
-    public let basicHTTPAuth: BasicHTTPAuth?
+    public let authentication: Authentication?
     public let baseURL: URL
     
     public var logPrettyPrintedJson = true
 
-    public init(basicHTTPAuth: BasicHTTPAuth?, baseURL: URL) {
-        self.basicHTTPAuth = basicHTTPAuth
+    public init(authentication: Authentication?, baseURL: URL) {
+        self.authentication = authentication
         self.baseURL = baseURL
     }
 }
-
 
 public protocol PathComponentsProvider {
     associatedtype Query: Encodable
@@ -109,6 +129,7 @@ public protocol Requestable {
     associatedtype Path: PathComponentsProvider
     associatedtype Response
 
+    static var apiType: APIType? { get }
     static var method: HTTPMethod { get }
     static var dateEncodingStrategy: JSONEncoder.DateEncodingStrategy { get }
     static var dataEncodingStrategy: JSONEncoder.DataEncodingStrategy { get }
@@ -155,7 +176,6 @@ extension Requestable {
     }
 }
 
-
 extension Requestable {
     internal static func requestData(path: Path, parameters: Parameter?, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping ((Result<Data, RequestableError>) -> Void)) {
 
@@ -168,9 +188,18 @@ extension Requestable {
         let auth: [String: String]?
         var urlComponents: URLComponents
 
-        auth = environment.configuration?.basicHTTPAuth?.authorizationHeader
-        urlComponents = URLComponents.init(string: baseURL)!
-        
+        if let authentication = apiType?.authentication {
+            auth = authentication.authorizationHeader
+        } else {
+            auth = environment.configuration?.authentication?.authorizationHeader
+        }
+
+        if let url = apiType?.url {
+            urlComponents = URLComponents.init(string: url)!
+        } else {
+            urlComponents = URLComponents.init(string: baseURL)!
+        }
+
             do {
                 if let baseUrl = urlComponents.url {
                     let encoder = JSONEncoder()
@@ -295,6 +324,19 @@ extension Requestable where Response: Decodable {
             }
         }
     }
+}
+
+extension Requestable where Response == Void, Parameter == Never {
+  public static func request(path: Path, sessionConfig: URLSessionConfiguration? = nil, completion: @escaping (Result<Response, RequestableError>) -> Void) {
+    return requestData(path: path, parameters: nil, sessionConfig: sessionConfig) { result in
+      switch result {
+        case .failure(let error):
+          completion(.failure(error))
+        case .success:
+          completion(.success(()))
+      }
+    }
+  }
 }
 
 extension Requestable where Response: Decodable, Parameter == Never {
